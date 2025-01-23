@@ -392,67 +392,67 @@ public enum CharacterState
         }
         
         private void HandleBlink()
-{
-    if (_isBlinking)
-    {
-        _blinkTimer += Time.deltaTime;
-        float t = _blinkTimer / BlinkDuration;
-
-        if (t >= 1f)
         {
-            _isBlinking = false;
-            Motor.SetPositionAndRotation(_blinkTargetPosition, Motor.TransientRotation);
-        }
-        else
-        {
-            Vector3 newPosition = Vector3.Lerp(_blinkStartPosition, _blinkTargetPosition, t);
-            Motor.SetPositionAndRotation(newPosition, Motor.TransientRotation);
-        }
-    }
-    else if (_blinkRequested && Time.time >= _lastBlinkTime + BlinkCooldown)
-    {
-        Vector3 blinkDirection = Vector3.zero;
-
-        // Calculate direction based on current grounding and input
-        if (Motor.GroundingStatus.IsStableOnGround)
-        {
-            // Reorient input direction based on ground normal (same as movement)
-            Vector3 effectiveGroundNormal = Motor.GroundingStatus.GroundNormal;
-            Vector3 inputRight = Vector3.Cross(_moveInputVector, Motor.CharacterUp);
-            Vector3 reorientedInput = Vector3.Cross(effectiveGroundNormal, inputRight).normalized;
-            blinkDirection = reorientedInput * _moveInputVector.magnitude;
-            blinkDirection.Normalize();
-        }
-        else
-        {
-            // Use input direction or fallback to character's forward
-            blinkDirection = _moveInputVector.normalized;
-            if (blinkDirection.sqrMagnitude < 0.1f)
+            if (_isBlinking)
             {
-                blinkDirection = Motor.CharacterForward;
+                _blinkTimer += Time.deltaTime;
+                float t = _blinkTimer / BlinkDuration;
+
+                if (t >= 1f)
+                {
+                    _isBlinking = false;
+                    Motor.SetPositionAndRotation(_blinkTargetPosition, Motor.TransientRotation);
+                }
+                else
+                {
+                    Vector3 newPosition = Vector3.Lerp(_blinkStartPosition, _blinkTargetPosition, t);
+                    Motor.SetPositionAndRotation(newPosition, Motor.TransientRotation);
+                }
+            }
+            else if (_blinkRequested && Time.time >= _lastBlinkTime + BlinkCooldown)
+            {
+                Vector3 blinkDirection = Vector3.zero;
+
+                // Calculate direction based on current grounding and input
+                if (Motor.GroundingStatus.IsStableOnGround)
+                {
+                    // Reorient input direction based on ground normal (same as movement)
+                    Vector3 effectiveGroundNormal = Motor.GroundingStatus.GroundNormal;
+                    Vector3 inputRight = Vector3.Cross(_moveInputVector, Motor.CharacterUp);
+                    Vector3 reorientedInput = Vector3.Cross(effectiveGroundNormal, inputRight).normalized;
+                    blinkDirection = reorientedInput * _moveInputVector.magnitude;
+                    blinkDirection.Normalize();
+                }
+                else
+                {
+                    // Use input direction or fallback to character's forward
+                    blinkDirection = _moveInputVector.normalized;
+                    if (blinkDirection.sqrMagnitude < 0.1f)
+                    {
+                        blinkDirection = Motor.CharacterForward;
+                    }
+                }
+
+                if (blinkDirection.sqrMagnitude > 0.1f)
+                {
+                    _blinkStartPosition = Motor.TransientPosition;
+                    _blinkTargetPosition = _blinkStartPosition + (blinkDirection * BlinkDistance);
+
+                    // Adjust for obstacles
+                    RaycastHit hit;
+                    if (Physics.Raycast(_blinkStartPosition, blinkDirection, out hit, BlinkDistance, Motor.CollidableLayers))
+                    {
+                        _blinkTargetPosition = hit.point - (blinkDirection * Motor.Capsule.radius);
+                    }
+
+                    _blinkTimer = 0f;
+                    _isBlinking = true;
+                    _lastBlinkTime = Time.time;
+                }
+
+                _blinkRequested = false;
             }
         }
-
-        if (blinkDirection.sqrMagnitude > 0.1f)
-        {
-            _blinkStartPosition = Motor.TransientPosition;
-            _blinkTargetPosition = _blinkStartPosition + (blinkDirection * BlinkDistance);
-
-            // Adjust for obstacles
-            RaycastHit hit;
-            if (Physics.Raycast(_blinkStartPosition, blinkDirection, out hit, BlinkDistance, Motor.CollidableLayers))
-            {
-                _blinkTargetPosition = hit.point - (blinkDirection * Motor.Capsule.radius);
-            }
-
-            _blinkTimer = 0f;
-            _isBlinking = true;
-            _lastBlinkTime = Time.time;
-        }
-
-        _blinkRequested = false;
-    }
-}
 
         /// <summary>
         /// (Called by KinematicCharacterMotor during its update cycle)
