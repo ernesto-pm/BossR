@@ -26794,7 +26794,7 @@ MonoBehaviour:
   BlinkCooldown: 0.5
   BlinkDuration: 0.1
   IgnoredColliders: []
-  BonusOrientationMethod: 2
+  BonusOrientationMethod: 1
   BonusOrientationSharpness: 10
   Gravity: {x: 0, y: -30, z: 0}
   MeshRoot: {fileID: 1023792637}
